@@ -3,20 +3,326 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ringtwist</title>
+<title>Ringtwist: IQ Logic Puzzle</title>
+<meta name="description" content="Drag a ring, slide every bead on it, and make each group one color. A calm logic puzzle with 50 levels across 5 worlds. Free on the App Store.">
+<meta name="apple-itunes-app" content="app-id=6816699255">
+<meta name="theme-color" content="#15123B">
+<meta property="og:title" content="Ringtwist: IQ Logic Puzzle">
+<meta property="og:description" content="Turn the rings, match colors. 50 levels across 5 worlds, no timer, no rush.">
+<meta property="og:image" content="https://kinjalpipaliya.github.io/ringtwist-site/assets/shot-1.jpg">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --bg: #ffffff; --text: #1d1b2e; --accent: #4b3fb8; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #15123B; --text: #f3f1ff; --accent: #FF9AD5; } }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 680px; margin: 0 auto; padding: 40px 16px; }
-  a { color: var(--accent); }
+  /* Colors from the game's "Glow" theme (src/theme.js). The game is dark only, so the site is too. */
+  :root {
+    --bg: #15123B; --bg-2: #1C1840; --sheet: #231D54;
+    --text: #FFFFFF; --lavender: #B9A7FF; --muted: #9C98C8;
+    --panel: rgba(255,255,255,0.07); --rule: rgba(255,255,255,0.12);
+    --accent: #FFE066; --accent-text: #1C1840;
+    --ring-band: #5A55B0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 600 17px/1.6 Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  h1, h2, h3 { font-family: Outfit, -apple-system, sans-serif; font-weight: 800; line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
+  a { color: var(--lavender); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header */
+  header { padding: 18px 0; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 20px Outfit, sans-serif; }
+  .brand img { width: 36px; height: 36px; border-radius: 9px; }
+  header nav a { color: var(--lavender); text-decoration: none; margin-left: 20px; font-weight: 700; display: inline-block; padding: 10px 0; }
+  header nav a:hover { color: var(--text); }
+
+  /* Hero */
+  .hero {
+    position: relative; padding: 40px 0 72px;
+    background: radial-gradient(60% 60% at 75% 40%, rgba(138,85,240,0.35), transparent 70%),
+                radial-gradient(40% 40% at 10% 90%, rgba(255,92,184,0.12), transparent 70%);
+  }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; }
+  .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 14px; margin-bottom: 14px; }
+  .hero h1 { font-size: clamp(40px, 6.5vw, 68px); }
+  .hero h1 span { color: var(--lavender); }
+  .hero p.lead { font-size: 20px; color: #E4DEFF; max-width: 30em; margin: 20px 0 30px; }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 12px 24px;
+    background: var(--accent); color: var(--accent-text); border-radius: 18px; text-decoration: none;
+    font: 800 18px Outfit, sans-serif; line-height: 1.15; box-shadow: 0 8px 30px rgba(255,224,102,0.25);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(255,224,102,0.35); }
+  .btn svg { width: 22px; height: 22px; }
+  .btn small { display: block; font: 700 12px Nunito, sans-serif; opacity: .75; }
+  .note { color: var(--muted); font-size: 15px; }
+  .rings { width: 100%; max-width: 460px; justify-self: center; overflow: visible; }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
+  .section-head h2 { font-size: clamp(30px, 4.5vw, 44px); }
+  .section-head p { color: var(--lavender); font-size: 18px; margin: 12px 0 0; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 22px; padding: 26px; }
+  .num {
+    display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--sheet); color: var(--accent); font: 800 18px Outfit, sans-serif; margin-bottom: 16px;
+    border: 1px solid rgba(255,224,102,0.35);
+  }
+  .card h3 { font-size: 21px; margin-bottom: 8px; }
+  .card p { margin: 0; color: #DCD6FA; }
+
+  /* Screenshots */
+  .shots {
+    display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 8px 16px 24px; margin: 0 -16px; scrollbar-width: thin; scrollbar-color: var(--ring-band) transparent;
+  }
+  .shots img {
+    flex: 0 0 auto; width: 230px; height: auto; aspect-ratio: 462 / 1000; border-radius: 26px;
+    scroll-snap-align: center; box-shadow: 0 18px 40px rgba(0,0,0,0.35); background: var(--bg-2);
+  }
+  @media (min-width: 1100px) { .shots { justify-content: center; } .shots img { width: 160px; border-radius: 20px; } }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 24px; }
+  .feature { display: flex; gap: 16px; align-items: flex-start; }
+  .feature .dot { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; margin-top: 4px; }
+  .feature h3 { font-size: 19px; margin-bottom: 4px; }
+  .feature p { margin: 0; color: #DCD6FA; font-size: 16px; }
+
+  .final { text-align: center; background: linear-gradient(180deg, transparent, rgba(138,85,240,0.18)); }
+  .final img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 12px 40px rgba(138,85,240,0.45); }
+  .final h2 { font-size: clamp(30px, 4.5vw, 44px); margin: 20px 0 10px; }
+  .final p { color: var(--lavender); margin: 0 0 26px; font-size: 18px; }
+  .final .cta { justify-content: center; }
+
+  footer { border-top: 1px solid var(--rule); padding: 28px 0 40px; color: var(--muted); font-size: 15px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: center; }
+  footer a { color: var(--lavender); text-decoration: none; margin-right: 20px; display: inline-block; padding: 10px 0; }
+  footer a:hover { color: var(--text); }
+
+  a:focus-visible, .shots:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+  @media (max-width: 860px) {
+    .hero { padding-top: 8px; }
+    .hero .wrap { grid-template-columns: 1fr; text-align: center; gap: 12px; }
+    .hero p.lead { margin-left: auto; margin-right: auto; }
+    .hero .cta { justify-content: center; }
+    .rings { max-width: 320px; order: -1; }
+    .steps, .features { grid-template-columns: 1fr; }
+    header nav a:not(:last-child) { display: none; }
+  }
+  @media (max-width: 480px) {
+    .shots img { width: 200px; }
+    section { padding: 56px 0; }
+    .hero p.lead { font-size: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn { transition: none; }
+  }
 </style>
 </head>
 <body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="">Ringtwist</a>
+    <nav>
+      <a href="#how">How to play</a>
+      <a href="#screens">Screenshots</a>
+      <a href="https://apps.apple.com/app/id6816699255">Download</a>
+    </nav>
+  </div>
+</header>
+
 <main>
-<h1>Ringtwist: IQ Logic Puzzle</h1>
-<p>Drag the rings until every group of beads is one color.</p>
-<p><a href="privacy/">Privacy Policy</a> · <a href="mailto:kinjalpipaliya@icloud.com">Contact</a></p>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Logic puzzle for iPhone</div>
+      <h1>Turn the rings.<br><span>Match the colors.</span></h1>
+      <p class="lead">Drag a ring and every bead on it slides along. Make each group one color. Easy to learn, hard to master, and there's no timer.</p>
+      <div class="cta">
+        <a class="btn" href="https://apps.apple.com/app/id6816699255">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.72-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.33-3.55zM14.2 6.1c.61-.74 1.02-1.76.91-2.78-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.23z"/></svg>
+          <span><small>Download on the</small>App Store</span>
+        </a>
+        <span class="note">Free to play</span>
+      </div>
+    </div>
+
+    <!-- Three overlapping rings that take turns, like the game. Drawn and animated by the script below. -->
+    <svg class="rings" id="rings" viewBox="0 0 400 380" role="img" aria-label="Three overlapping rings with colored beads">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+    </svg>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How to play</h2>
+      <p>One simple rule. Plenty of ways to get it wrong.</p>
+    </div>
+    <div class="steps">
+      <div class="card">
+        <div class="num">1</div>
+        <h3>Drag a ring</h3>
+        <p>Turn any ring and every bead on it slides along. It snaps into place, one turn at a time.</p>
+      </div>
+      <div class="card">
+        <div class="num">2</div>
+        <h3>Watch the groups</h3>
+        <p>Beads sit where rings cross, so every turn helps one group and disturbs another. Plan ahead.</p>
+      </div>
+      <div class="card">
+        <div class="num">3</div>
+        <h3>Make each group one color</h3>
+        <p>Solve it in par turns or fewer for three stars. Undo and restart are always free.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>From two rings to nine</h2>
+      <p>50 levels across 5 worlds, ending with the full board: nine rings, 54 beads and six groups.</p>
+    </div>
+    <div class="shots" tabindex="0" aria-label="Screenshots, scroll sideways">
+      <img src="assets/shot-1.jpg" alt="A level with overlapping rings of colored beads" loading="lazy" width="462" height="1000">
+      <img src="assets/shot-2.jpg" alt="Ringtwist screenshot 2" loading="lazy" width="462" height="1000">
+      <img src="assets/shot-3.jpg" alt="Ringtwist screenshot 3" loading="lazy" width="462" height="1000">
+      <img src="assets/shot-4.jpg" alt="Ringtwist screenshot 4" loading="lazy" width="462" height="1000">
+      <img src="assets/shot-5.jpg" alt="Ringtwist screenshot 5" loading="lazy" width="462" height="1000">
+      <img src="assets/shot-6.jpg" alt="Ringtwist screenshot 6" loading="lazy" width="462" height="1000">
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Made to feel good</h2>
+    </div>
+    <div class="features">
+      <div class="feature"><span class="dot" style="background:#1FBF6B;box-shadow:0 0 14px #1FBF6B"></span>
+        <div><h3>No timer, no rush</h3><p>Take as long as you like. Undo and restart are always free.</p></div></div>
+      <div class="feature"><span class="dot" style="background:#FFC61A;box-shadow:0 0 14px #FFC61A"></span>
+        <div><h3>Help when you're stuck</h3><p>"Show next turn" highlights the ring to turn. "Watch it solve" plays out the rest.</p></div></div>
+      <div class="feature"><span class="dot" style="background:#3D6BFF;box-shadow:0 0 14px #3D6BFF"></span>
+        <div><h3>Smooth and tactile</h3><p>Gliding ring motion with gentle haptics and sound.</p></div></div>
+      <div class="feature"><span class="dot" style="background:#FF3D3D;box-shadow:0 0 14px #FF3D3D"></span>
+        <div><h3>Colorblind friendly</h3><p>Optional shapes on every bead, so color is never the only clue.</p></div></div>
+      <div class="feature"><span class="dot" style="background:#FF7A1A;box-shadow:0 0 14px #FF7A1A"></span>
+        <div><h3>No account needed</h3><p>No sign-in. Your progress stays on your phone.</p></div></div>
+      <div class="feature"><span class="dot" style="background:#C9D3FF;box-shadow:0 0 14px #C9D3FF"></span>
+        <div><h3>Respects reduced motion</h3><p>Follows your phone's reduced-motion setting.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <img src="assets/icon.png" alt="Ringtwist app icon" width="96" height="96">
+    <h2>Ready for a twist?</h2>
+    <p>How few turns can you solve it in?</p>
+    <div class="cta">
+      <a class="btn" href="https://apps.apple.com/app/id6816699255">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.72-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.33-3.55zM14.2 6.1c.61-.74 1.02-1.76.91-2.78-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.23z"/></svg>
+        <span><small>Download on the</small>App Store</span>
+      </a>
+    </div>
+  </div>
+</section>
 </main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="privacy/">Privacy Policy</a>
+      <a href="mailto:kinjalpipaliya@icloud.com">Contact &amp; support</a>
+    </div>
+    <div>© 2026 Kinjal Pipaliya</div>
+  </div>
+</footer>
+
+<script>
+  // Hero animation: three rings, six beads each, turning one ring at a time by one bead step.
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.getElementById('rings');
+    var R = 100;
+    var rings = [ { cx: 140, cy: 150 }, { cx: 260, cy: 150 }, { cx: 200, cy: 254 } ];
+    var colors = [
+      ['#1FBF6B', '#7DFFB0'], ['#FF3D3D', '#FF8A8A'], ['#FFC61A', '#FFF08A'],
+      ['#FF7A1A', '#FFB870'], ['#3D6BFF', '#8FB3FF'], ['#C9D3FF', '#FFFFFF']
+    ];
+    var defs = svg.querySelector('defs');
+    colors.forEach(function (c, i) {
+      var g = document.createElementNS(NS, 'radialGradient');
+      g.id = 'b' + i; g.setAttribute('cx', '35%'); g.setAttribute('cy', '30%');
+      g.innerHTML = '<stop offset="0" stop-color="' + c[1] + '"/><stop offset="1" stop-color="' + c[0] + '"/>';
+      defs.appendChild(g);
+    });
+
+    // Tracks first, so every bead draws on top of every ring.
+    rings.forEach(function (r) {
+      var band = document.createElementNS(NS, 'circle');
+      band.setAttribute('cx', r.cx); band.setAttribute('cy', r.cy); band.setAttribute('r', R);
+      band.setAttribute('fill', 'none'); band.setAttribute('stroke', '#5A55B0');
+      band.setAttribute('stroke-width', 14); band.setAttribute('opacity', 0.35);
+      svg.appendChild(band);
+      var line = band.cloneNode();
+      line.setAttribute('stroke', '#A7A3FF'); line.setAttribute('stroke-width', 2); line.setAttribute('opacity', 0.9);
+      svg.appendChild(line);
+    });
+
+    var groups = rings.map(function (r, ri) {
+      var g = document.createElementNS(NS, 'g');
+      g.style.transformOrigin = r.cx + 'px ' + r.cy + 'px';
+      g.style.transition = 'transform 700ms cubic-bezier(.45,0,.2,1)';
+      for (var k = 0; k < 6; k++) {
+        var a = (k * 60 + ri * 20) * Math.PI / 180;
+        var bead = document.createElementNS(NS, 'circle');
+        bead.setAttribute('cx', r.cx + R * Math.cos(a));
+        bead.setAttribute('cy', r.cy + R * Math.sin(a));
+        bead.setAttribute('r', 13);
+        bead.setAttribute('fill', 'url(#b' + ((k + ri * 2) % 6) + ')');
+        bead.setAttribute('filter', 'url(#glow)');
+        g.appendChild(bead);
+      }
+      svg.appendChild(g);
+      return { g: g, angle: 0 };
+    });
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var turn = 0;
+    setInterval(function () {
+      if (document.hidden) return;
+      var ring = groups[turn % 3];
+      ring.angle += (turn % 2 ? -60 : 60);
+      ring.g.style.transform = 'rotate(' + ring.angle + 'deg)';
+      turn++;
+    }, 1400);
+  })();
+</script>
 </body>
 </html>
